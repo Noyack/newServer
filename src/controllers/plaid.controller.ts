@@ -15,7 +15,7 @@ const configuration = new Configuration({
   },
 });
 
-const plaidClient = new PlaidApi(configuration);
+export const plaidClient = new PlaidApi(configuration);
 
 // Add this to your Express server routes
 export const createUserToken = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -43,13 +43,13 @@ export const createUserToken = async (req: AuthenticatedRequest, res: Response):
     res.json({ user_token: userToken });
   } catch (error: any) {
     console.error('Error creating user token:', error);
-    res.status(500).json({ error });
+    res.status(500).json( "Server Error" );
   }
 };
 
 export const createLink = async(req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { userId, userToken } = req.body;
+    const { userId, userToken, list } = req.body;
     
     // Check if userToken was provided
     if (!userToken) {
@@ -58,13 +58,13 @@ export const createLink = async(req: AuthenticatedRequest, res: Response): Promi
       });
       return;
     }
-    
+    // ['auth', 'transactions', 'identity', 'investments', 'liabilities']
     const request = {
       user: {
         client_user_id: userId,
       },
       client_name: 'Noyack',
-      products: ['auth', 'transactions', 'identity', 'investments', 'liabilities'] as Products[],
+      products: list as Products[],
       language: 'en',
       country_codes: ['US'] as CountryCode[],
       user_token: userToken, // Include the user token here
@@ -115,23 +115,33 @@ export const account = async (req: AuthenticatedRequest, res: Response): Promise
     const { userId } = req.query;
     
     // Get the Plaid access token for this user
-    const plaidItem = await db.query.plaidItems.findFirst({
+    const plaidItem = await db.query.plaidItems.findMany({
       where: eq(plaidItems.userId, userId as string),
     });
     
-    if (!plaidItem) {
+    if (!plaidItem || plaidItem.length === 0) {
       res.status(404).json({ error: 'No linked accounts found' });
       return;
     }
     
-    const response = await plaidClient.accountsGet({
-      access_token: plaidItem.accessToken,
+    // Wait for all account requests to complete
+    const accountPromises = plaidItem
+    .map(async (item) => {
+      const response = await plaidClient.accountsGet({
+        access_token: item.accessToken,
+      });
+      return response.data;
     });
     
-    res.json(response.data);
+    const allAccountData = await Promise.all(accountPromises);
+    
+    // Flatten the array if you want all accounts in one response
+    const flattenedAccounts = allAccountData.flat();
+    
+    res.json(flattenedAccounts);
   } catch (error: any) {
     console.error(error);
-    res.status(500).json({ error });
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 };
 

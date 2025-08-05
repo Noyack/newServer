@@ -17,12 +17,14 @@
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.1.6",
     "axios": "^1.8.4",
+    "bull": "^4.16.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.1",
     "express": "^4.18.2",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
+    "ioredis": "^5.6.1",
     "micro": "^10.0.1",
     "mysql2": "^3.6.5",
     "plaid": "^31.1.0",
@@ -34,7 +36,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^22.13.10",
-    "drizzle-kit": "^0.30.5",
+    "drizzle-kit": "^0.31.4",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.2"

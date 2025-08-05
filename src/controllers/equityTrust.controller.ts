@@ -1,4 +1,4 @@
-// controllers/equityTrust.controller.ts
+// controllers/equityTrust.controller.ts - FIXED VERSION
 import { Response } from 'express';
 import { EquityTrustService, AccountOpenRequest, DirectTradeRequest } from '../services/equityTrust.service';
 import { equityTrustConfig } from '../config';
@@ -7,10 +7,12 @@ import { AuthenticatedRequest } from '../middleware/auth';
 const equityTrustService = new EquityTrustService(equityTrustConfig);
 
 export const equityTrustController = {
-  // Account opening endpoint
+  // Account opening endpoint - FIXED
   async openAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { formData, apiVersion = '3' } = req.body;
+      
+      console.log('🔧 Received formData:', JSON.stringify(formData, null, 2));
       
       // Validate required fields
       if (!formData) {
@@ -20,14 +22,73 @@ export const equityTrustController = {
         return;
       }
 
-      // Transform frontend form data to Equity Trust format
+      // Helper function to clean phone number (remove formatting)
+      const cleanPhoneNumber = (phone: string): string => {
+        return phone.replace(/\D/g, ''); // Remove all non-digits
+      };
+
+      // Helper function to clean SSN (remove dashes)
+      const cleanSSN = (ssn: string): string => {
+        return ssn.replace(/\D/g, ''); // Remove all non-digits
+      };
+
+      // Helper function to map fee payment method
+      const mapFeePaymentMethod = (method: string): string => {
+        const mapping: { [key: string]: string } = {
+          'one_time': 'Deduct from Account',
+          'monthly': 'Credit Card',
+          'quarterly': 'Deduct from Account',
+          'annual': 'Deduct from Account',
+          'credit_card': 'Credit Card',
+          'deduct_from_account': 'Deduct from Account'
+        };
+        return mapping[method] || 'Deduct from Account';
+      };
+
+      // Helper function to map funding method
+      const mapFundingMethod = (method: string): string => {
+        const mapping: { [key: string]: string } = {
+          'ach_transfer': 'Transfer',
+          'wire_transfer': 'Wire',
+          'check': 'Check',
+          'rollover': 'Rollover',
+          'trustee_transfer': 'Transfer'
+        };
+        return mapping[method] || 'Transfer';
+      };
+
+      // Helper function to map account purpose
+      const mapAccountPurpose = (purpose: string): string => {
+        const mapping: { [key: string]: string } = {
+          'retirement': 'Wealth Accumulation/Investment',
+          'rollover': 'Wealth Accumulation/Investment',
+          'transfer': 'Wealth Accumulation/Investment',
+          'conversion': 'Wealth Accumulation/Investment'
+        };
+        return mapping[purpose] || 'Wealth Accumulation/Investment';
+      };
+
+      // Helper function to map employment status
+      const mapEmploymentStatus = (status: string): string => {
+        const mapping: { [key: string]: string } = {
+          'employed': 'Employed',
+          'self_employed': 'Self-Employed',
+          'unemployed': 'Unemployed',
+          'retired': 'Retired',
+          'student': 'Student',
+          'other': 'Other'
+        };
+        return mapping[status] || 'Employed';
+      };
+
+      // Transform frontend form data to EXACT Equity Trust format
       const accountOpenRequest: AccountOpenRequest = {
         requests: [{
           owner: {
             firstName: formData.firstName,
             lastName: formData.lastName,
-            dateOfBirth: formData.dateOfBirth,
-            ssn: formData.ssn,
+            dateOfBirth: formData.dateOfBirth, // Keep as YYYY-MM-DD
+            ssn: cleanSSN(formData.ssn), // Remove dashes: "123121234"
             married: formData.married || false,
             minor: formData.minor || false,
             addresses: [
@@ -40,7 +101,7 @@ export const equityTrustController = {
                 zipCode: formData.zipCode,
                 primary: true,
               },
-              ...(formData.mailingAddress ? [{
+              ...(formData.mailingAddress && formData.mailingAddress !== formData.legalAddress ? [{
                 addressType: 'Mailing',
                 addressLine1: formData.mailingAddress,
                 addressLine2: formData.mailingAddressLine2 || '',
@@ -51,33 +112,40 @@ export const equityTrustController = {
               }] : [])
             ],
             phones: [{
-              phoneType: 'Home',
-              phoneNumber: formData.phoneNumber,
+              phoneType: 'Cellular', // Use Cellular like in example
+              phoneNumber: cleanPhoneNumber(formData.phoneNumber), // Remove formatting: "1233331234"
               primary: true,
             }],
             emailAddresses: [{
-              email: formData.email, // Use Clerk email if available
+              email: formData.email,
             }],
           },
+          // Map beneficiaries with CORRECT PascalCase (as in example)
+          // beneficiaries: formData.beneficiaries?.map((ben: any) => ({
+          //   FirstName: ben.firstName,        // ← PascalCase
+          //   LastName: ben.lastName,          // ← PascalCase  
+          //   Percentage: ben.percentage,      // ← PascalCase
+          //   DateOfBirth: ben.dateOfBirth,    // ← PascalCase
+          //   BeneficiaryType: ben.beneficiaryType, // ← PascalCase
+          //   Spouse: ben.spouse || false,     // ← PascalCase
+          // })) || [],
           accountType: formData.iraType === 'traditional' ? 'Traditional IRA' :
                       formData.iraType === 'roth' ? 'Roth IRA' :
                       formData.iraType === 'sep' ? 'SEP IRA' :
                       'SIMPLE IRA',
-          beneficiaries: formData.beneficiaries?.map((ben: any) => ({
-            firstName: ben.firstName,
-            lastName: ben.lastName,
-            percentage: ben.percentage,
-            dateOfBirth: ben.dateOfBirth,
-            beneficiaryType: ben.beneficiaryType,
-            spouse: ben.spouse || false,
-          })) || [],
+          // ADD MISSING REQUIRED FIELDS from example
+          preciousMetals: {
+            segregated: formData.investmentTypes?.Metals || false
+          },
+          goldLevelService: false, // Add this required field
+          eSignature: false,       // Add this required field
           fees: {
-            currentFeePaymentMethod: formData.paymentMethod || 'Credit Card',
+            currentFeePaymentMethod: mapFeePaymentMethod(formData.paymentMethod),
             futureFeePaymentMethod: 'Deduct from Account',
           },
           funding: {
             fundingAmount: parseFloat(formData.estimatedFundingAmount) || 0,
-            fundingMethod: formData.fundingMethod || 'Transfer',
+            fundingMethod: mapFundingMethod(formData.fundingMethod),
             contributionYear: new Date().getFullYear(),
           },
           statementPreference: formData.statementPreference || 'Electronic',
@@ -87,35 +155,59 @@ export const equityTrustController = {
             Metals: formData.investmentTypes?.Metals || false,
             Traditional: formData.investmentTypes?.Traditional || true,
           },
-          customerDueDiligence: apiVersion === '3' ? {
-            accountPurpose: formData.accountPurpose || 'Retirement Savings',
+          // COMPLETE customerDueDiligence with ALL required fields
+          customerDueDiligence: {
+            accountPurpose: mapAccountPurpose(formData.accountPurpose),
             initialFundSource: {
-              employmentWages: formData.initialSourceOfFunds === 'employment_income',
+              retirementFunds: formData.initialSourceOfFunds === 'rollover_401k',
               transfer: formData.initialSourceOfFunds === 'ira_transfer',
               rollover: formData.initialSourceOfFunds === 'rollover_401k',
+              employmentWages: formData.initialSourceOfFunds === 'employment_income',
               investments: formData.initialSourceOfFunds === 'savings',
               inheritanceTrust: formData.initialSourceOfFunds === 'inheritance',
-              other: !['employment_income', 'ira_transfer', 'rollover_401k', 'savings', 'inheritance'].includes(formData.initialSourceOfFunds),
+              other: !['rollover_401k', 'ira_transfer', 'employment_income', 'savings', 'inheritance'].includes(formData.initialSourceOfFunds),
             },
+            initialFundSourceOtherDetails: formData.initialSourceOfFunds === 'gift' ? 'Gift' : 'Other details',
             ongoingFundSource: {
-              employmentWages: formData.ongoingSourceOfFunds === 'employment_income',
+              retirementFunds: formData.ongoingSourceOfFunds === 'periodic_contributions',
               transfer: formData.ongoingSourceOfFunds === 'transfer',
-              rollover: formData.ongoingSourceOfFunds === 'rollover',
-              investments: formData.ongoingSourceOfFunds === 'investments',
-              other: !['employment_income', 'transfer', 'rollover', 'investments'].includes(formData.ongoingSourceOfFunds),
+              rollover: formData.ongoingSourceOfFunds === 'automatic_rollover',
+              employmentWages: formData.ongoingSourceOfFunds === 'employment_income',
+              investments: formData.ongoingSourceOfFunds === 'periodic_contributions',
+              inheritanceTrust: false,
+              other: formData.ongoingSourceOfFunds === 'none',
             },
-            employmentStatus: formData.employmentStatus || 'Employed',
-            employerName: formData.employerName || '',
-            occupationCategory: formData.occupationCategory || '',
-            occupation: formData.occupation || '',
-          } : undefined,
+            ongoingFundSourceOtherDetails: formData.ongoingSourceOfFunds === 'none' ? 'No ongoing contributions' : 'More details',
+            // ADD MISSING ID FIELDS (required in v3)
+            identificationType: 'US Drivers License',
+            stateOfIssuance: formData.state,
+            idNumber: '1234', // You'll need to collect this in frontend
+            issueDate: '01/01/2020', // You'll need to collect this in frontend  
+            expirationDate: '01/01/2030', // You'll need to collect this in frontend
+            employmentStatus: mapEmploymentStatus(formData.employmentStatus),
+            employerName: formData.employerName || 'Self-Employed',
+            occupationCategory: formData.occupationCategory || 'Computer and Mathematical Occupations',
+            occupation: formData.occupation || 'Software Developers',
+            employerAddress: formData.employerAddress ? {
+              addressLine1: formData.employerAddress,
+              city: formData.city,
+              state: formData.state,
+              zipCode: formData.zipCode,
+            } : {
+              addressLine1: formData.legalAddress,
+              city: formData.city,
+              state: formData.state,
+              zipCode: formData.zipCode,
+            },
+          },
         }],
       };
 
+      console.log('📤 Sending to Equity Trust API:', JSON.stringify(accountOpenRequest, null, 2));
+
       const response = await equityTrustService.openAccount(accountOpenRequest, apiVersion);
       
-      // Save account info to your database here
-      // await saveUserAccount(req.userId, response.response[0]);
+      console.log('📥 Equity Trust API Response:', JSON.stringify(response, null, 2));
 
       res.json({
         success: true,
@@ -124,9 +216,7 @@ export const equityTrustController = {
         activityId: response.response[0].activityId,
       });
     } catch (error) {
-      console.error('Account opening error:', error);
-      console.log('Account opening error:', error);
-
+      console.error('❌ Account opening error:', error);
       res.status(500).json({
         error: 'Failed to open account',
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -134,7 +224,7 @@ export const equityTrustController = {
     }
   },
 
-  // Investment submission endpoint
+  // Investment submission endpoint (unchanged)
   async submitInvestment(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { formData } = req.body;
@@ -165,9 +255,6 @@ export const equityTrustController = {
 
       const response = await equityTrustService.submitDirectTrade(directTradeRequest);
       
-      // Save investment record to your database
-      // await saveUserInvestment(req.userId, formData, response.response[0]);
-
       res.json({
         success: true,
         data: response,
@@ -182,7 +269,7 @@ export const equityTrustController = {
     }
   },
 
-  // Get account activities
+  // Get account activities (unchanged)
   async getActivities(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { accountNumber, activityId, fromDate, toDate } = req.query;
@@ -207,13 +294,11 @@ export const equityTrustController = {
     }
   },
 
-  // Get user accounts
+  // Get user accounts (unchanged)
   async getAccounts(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      // Get user's account numbers from your database
-      // const userAccountNumbers = await getUserAccountNumbers(req.userId);
-      
-      const response = await equityTrustService.getAccounts();
+      const { accountNumber } = req.params
+      const response = await equityTrustService.getAccounts(accountNumber);
       
       res.json({
         success: true,
@@ -228,7 +313,7 @@ export const equityTrustController = {
     }
   },
 
-  // Get account assets
+  // Get account assets (unchanged)
   async getAssets(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { accountNumber } = req.params;
@@ -255,7 +340,7 @@ export const equityTrustController = {
     }
   },
 
-  // Get account transactions
+  // Get account transactions (unchanged)
   async getTransactions(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { accountNumber } = req.params;

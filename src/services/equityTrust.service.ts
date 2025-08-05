@@ -43,6 +43,11 @@ interface AccountOpenRequest {
         email: string;
       }>;
     };
+    preciousMetals: {
+      segregated: boolean
+    }
+    goldLevelService: boolean;
+    eSignature: boolean;
     accountType: string;
     beneficiaries?: Array<{
       firstName: string;
@@ -79,6 +84,11 @@ interface AccountOpenRequest {
         inheritanceTrust?: boolean;
         other?: boolean;
       };
+      identificationType: string;
+      stateOfIssuance: string;
+      idNumber: string;
+      issueDate: string;
+      expirationDate: string;
       initialFundSourceOtherDetails?: string;
       ongoingFundSource: {
         retirementFunds?: boolean;
@@ -94,6 +104,12 @@ interface AccountOpenRequest {
       employerName?: string;
       occupationCategory?: string;
       occupation?: string;
+      employerAddress: {
+        addressLine1: string;
+        city: string;
+        state: string;
+        zipCode: string;
+      }
     };
   }>;
 }
@@ -266,10 +282,10 @@ class EquityTrustService {
     }
   }
 
-  async getAccounts(accountNumbers?: string[]): Promise<any> {
+  async getAccounts(accountNumber?: string): Promise<any> {
     try {
-      const params = accountNumbers ? { accountNumbers: accountNumbers.join(',') } : {};
-      const response = await this.axiosInstance.get('/accounts', { params });
+      const params = accountNumber ? { accountNumber: accountNumber } : {};
+      const response = await this.axiosInstance.get(`/accounts/search?accountNumber=${accountNumber}`);
       return response.data;
     } catch (error) {
       console.error('Error getting accounts:', error);

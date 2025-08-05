@@ -10,7 +10,7 @@ router.use(requireAuth);
 
 // Account management
 router.post('/account/open', (req, res) => equityTrustController.openAccount(req, res));
-router.get('/accounts', (req, res) => equityTrustController.getAccounts(req, res));
+router.get('/accounts/search/:accountNumber', (req, res) => equityTrustController.getAccounts(req, res));
 router.get('/accounts/:accountNumber/assets', (req, res) => equityTrustController.getAssets(req, res));
 router.get('/accounts/:accountNumber/transactions', (req, res) => equityTrustController.getTransactions(req, res));
 
