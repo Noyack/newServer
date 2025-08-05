@@ -33,6 +33,7 @@ import {
   logActivity,
 } from '../controllers/hubspot.controller';
 import express from 'express';
+import { getAllEbooks, getEbookDownloadUrl, getEbooksByFolder, searchEbooks } from '../controllers/ebooks.controller';
 
 const router = Router();
 
@@ -52,6 +53,22 @@ router.post('/contacts/search', searchContacts);
 router.post('/contacts/add-to-list', addContactToList);
 router.post('/contacts/remove-from-list', removeContactFromList);
 router.post('/contacts/sync-user', syncUser); // Legacy endpoint
+
+// ============================================================================
+// EBOOKS ROUTES
+// ============================================================================
+
+// Get all ebooks from the "ALL FINAL EBOOKS" folder
+router.get('/ebooks', getAllEbooks);
+
+// Search ebooks by name
+router.get('/ebooks/search', searchEbooks);
+
+// Get ebooks from a specific folder
+router.get('/ebooks/folder/:folderName', getEbooksByFolder);
+
+// Get download URL for a specific ebook
+router.get('/ebooks/:fileId/download', getEbookDownloadUrl);
 
 // ============================================================================
 // DEAL ROUTES (Protected - require authentication)
