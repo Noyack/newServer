@@ -53,13 +53,10 @@ const createHubSpotContact = async (
     if (firstName) contactProperties.firstname = firstName;
     if (lastName) contactProperties.lastname = lastName;
 
-    console.log('Creating HubSpot contact with properties:', contactProperties);
-
     const createResponse = await hubspotClient.post('/crm/v3/objects/contacts', {
       properties: contactProperties,
     });
 
-    console.log('✅ HubSpot contact created successfully:', createResponse.data.id);
     return createResponse.data.id;
   } catch (error:any) {
     console.error('Error creating HubSpot contact:', error);
@@ -90,13 +87,11 @@ const updateHubSpotContact = async (
     if (firstName) updateProperties.firstname = firstName;
     if (lastName) updateProperties.lastname = lastName;
 
-    console.log('Updating HubSpot contact with properties:', updateProperties);
 
     await hubspotClient.patch(`/crm/v3/objects/contacts/${contactId}`, {
       properties: updateProperties,
     });
 
-    console.log('✅ HubSpot contact updated successfully:', contactId);
   } catch (error) {
     console.error('Error updating HubSpot contact:', error);
     throw error;
@@ -129,7 +124,6 @@ export const syncUserWithHubSpot = async (
       createdAt: new Date()
     });
 
-    console.log(`🔄 Starting HubSpot sync for user ${userId} with email ${email}`);
 
     // Step 1: Search for existing contact by email
     const existingContactId = await searchContactByEmail(email);
@@ -142,12 +136,10 @@ export const syncUserWithHubSpot = async (
       contactId = existingContactId;
       isNewContact = false;
       
-      console.log(`✅ Found existing HubSpot contact: ${contactId} for email: ${email}`);
       
       // Optionally update the existing contact with current name info
       try {
         await updateHubSpotContact(contactId, email, firstName, lastName);
-        console.log('✅ Updated existing contact with current name information');
       } catch (updateError) {
         console.warn('⚠️ Could not update existing contact:', updateError);
         // Don't fail the sync if update fails
@@ -169,12 +161,8 @@ export const syncUserWithHubSpot = async (
 
     } else {
       // Contact doesn't exist - create new contact
-      console.log(`📝 No existing contact found for ${email}, creating new contact`);
-      
       contactId = await createHubSpotContact(email, firstName, lastName);
       isNewContact = true;
-      
-      console.log(`✅ Created new HubSpot contact: ${contactId} for email: ${email}`);
       
       // Update sync log
       await db.update(hubspotSyncLogs)
@@ -198,8 +186,6 @@ export const syncUserWithHubSpot = async (
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
-
-    console.log(`✅ Updated user ${userId} with HubSpot contact ID: ${contactId}`);
 
     // Final sync log update
     await db.update(hubspotSyncLogs)
@@ -291,8 +277,6 @@ export const retrySyncForUser = async (userId: string): Promise<{ contactId: str
       throw new Error(`User not found: ${userId}`);
     }
 
-    console.log(`🔄 Retrying HubSpot sync for user ${userId}`);
-
     return await syncUserWithHubSpot(
       user.id,
       user.email,
@@ -322,8 +306,6 @@ export const bulkSyncExistingUsers = async (limit: number = 50): Promise<{
       limit
     });
 
-    console.log(`Found ${usersToSync.length} users to sync with HubSpot`);
-
     const results: Array<{ userId: string; email: string; status: string; contactId?: string; error?: string }> = [];
     let synced = 0;
     let errors = 0;
@@ -346,8 +328,6 @@ export const bulkSyncExistingUsers = async (limit: number = 50): Promise<{
         });
 
         synced++;
-        console.log(`✅ Synced user ${user.id} (${user.email}) - Contact: ${result.contactId}`);
-
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         

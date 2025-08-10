@@ -210,8 +210,6 @@ export const getRandomContact = async (): Promise<any> => {
       const randomIndex = Math.floor(Math.random() * response.results.length);
       return response.results[randomIndex];
     }
-    
-    console.log('No contacts found in HubSpot');
     return null;
   } catch (error) {
     console.error('Error getting random HubSpot contact:', error);
@@ -308,7 +306,6 @@ export const deleteContact = async (contactId: string): Promise<void> => {
  */
 export const getContactProperties = async (): Promise<void> => {
   try {
-    console.log('Fetching all contact properties from HubSpot...');
     const propertiesResponse = await hubspotClient.get('/crm/v3/properties/contacts');
     
     const properties = propertiesResponse.data;
@@ -321,15 +318,11 @@ export const getContactProperties = async (): Promise<void> => {
         if (err) {
           console.error('Error writing properties to file:', err);
         } else {
-          console.log('Successfully wrote HubSpot properties to hubspot-contact-properties.json');
         }
       }
     );
     
-    console.log(`Found ${properties.results.length} contact properties in HubSpot`);
-    
     const sampleProperties = properties.results.slice(0, 5).map((p: { name: any; }) => p.name);
-    console.log('Sample property names:', sampleProperties);
     
   } catch (error) {
     console.error('Error getting HubSpot contact properties:', error);

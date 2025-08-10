@@ -57,7 +57,6 @@ export const updateUserProfile = async (
     
     const { firstName, lastName, age, investmentGoals, investmentAccreditation, riskTolerance, location, metadata } = req.body;
     
-    console.log('Updating profile for user:', req.userId);
     
     // Build update object with only provided fields
     const updateData: any = {
@@ -128,7 +127,6 @@ export const completeUserProfile = async (
       throw new AppError('Unauthorized to update this profile', 403);
     }
     
-    console.log('Completing onboarding for user:', userId);
     
     // Mark onboarding as complete and update any provided data
     const finalUpdateData = {

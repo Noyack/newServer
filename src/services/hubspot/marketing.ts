@@ -12,7 +12,6 @@ export const getMarketingEvents = async (limit: number = 100, after?: string): P
     const response = await hubspotClient.get('/marketing/v3/marketing-events/', {
       params,
     });
-
     return response.data;
   } catch (error) {
     console.error('Error getting marketing events:', error);

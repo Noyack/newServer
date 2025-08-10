@@ -33,7 +33,7 @@ import {
   logActivity,
 } from '../controllers/hubspot.controller';
 import express from 'express';
-import { getAllEbooks, getEbookDownloadUrl, getEbooksByFolder, searchEbooks } from '../controllers/ebooks.controller';
+import { getAllEbooks, getEbookMetadata, getEbooksByFolder, searchEbooks, streamEbookPageController } from '../controllers/ebooks.controller';
 
 const router = Router();
 
@@ -57,18 +57,20 @@ router.post('/contacts/sync-user', syncUser); // Legacy endpoint
 // ============================================================================
 // EBOOKS ROUTES
 // ============================================================================
+// Get all ebooks from the "ALL FINAL EBOOKS" folder (no download URLs)
+router.get('/ebooks', requireAuth, getAllEbooks);
 
-// Get all ebooks from the "ALL FINAL EBOOKS" folder
-router.get('/ebooks', getAllEbooks);
+// Search ebooks by name (no download URLs)
+router.get('/ebooks/search', requireAuth, searchEbooks);
 
-// Search ebooks by name
-router.get('/ebooks/search', searchEbooks);
+// Get ebooks from a specific folder (no download URLs)
+router.get('/ebooks/folder/:folderName', requireAuth, getEbooksByFolder);
 
-// Get ebooks from a specific folder
-router.get('/ebooks/folder/:folderName', getEbooksByFolder);
+// NEW: Get ebook metadata (page count, format, etc.)
+router.get('/ebooks/:fileId/metadata', requireAuth, getEbookMetadata);
 
-// Get download URL for a specific ebook
-router.get('/ebooks/:fileId/download', getEbookDownloadUrl);
+// NEW: Stream a specific page of an ebook
+router.get('/ebooks/:fileId/stream', requireAuth, streamEbookPageController);
 
 // ============================================================================
 // DEAL ROUTES (Protected - require authentication)

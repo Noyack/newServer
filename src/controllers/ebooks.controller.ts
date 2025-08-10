@@ -1,19 +1,35 @@
 // src/controllers/ebooks.controller.ts
 import { Request, Response } from 'express';
-import { getEbooks, getFilesByFolder, getFileDownloadUrl, searchFiles } from '../services/hubspot/files';
+import { getEbooks, getFilesByFolder, searchFiles } from '../services/hubspot/files';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { streamEbookPage, getEbookFileMetadata } from '../services/ebook-streaming.service';
 
 /**
- * Get all ebooks from HubSpot
+ * Get all ebooks from HubSpot (without download URLs)
  */
 export const getAllEbooks = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const ebooks = await getEbooks();
     
+    // Remove download URLs and add reader metadata
+    const safeEbooks = ebooks.map(ebook => ({
+      id: ebook.id,
+      name: ebook.name,
+      extension: ebook.extension,
+      type: ebook.type,
+      size: ebook.size,
+      createdAt: ebook.createdAt,
+      updatedAt: ebook.updatedAt,
+      path: ebook.path,
+      folder: ebook.folder,
+      // Remove: url field
+      isReadable: ['pdf', 'epub'].includes(ebook.extension?.toLowerCase() || '')
+    }));
+    
     res.status(200).json({
       success: true,
-      data: ebooks,
-      total: ebooks.length
+      data: safeEbooks,
+      total: safeEbooks.length
     });
   } catch (error) {
     console.error('Error fetching ebooks:', error);
@@ -26,7 +42,7 @@ export const getAllEbooks = async (req: AuthenticatedRequest, res: Response): Pr
 };
 
 /**
- * Get ebooks by search term
+ * Search ebooks (without download URLs)
  */
 export const searchEbooks = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -48,10 +64,24 @@ export const searchEbooks = async (req: AuthenticatedRequest, res: Response): Pr
       ebookExtensions.some(ext => file.extension?.toLowerCase() === ext)
     );
     
+    // Remove download URLs and add reader metadata
+    const safeEbooks = filteredEbooks.map(ebook => ({
+      id: ebook.id,
+      name: ebook.name,
+      extension: ebook.extension,
+      type: ebook.type,
+      size: ebook.size,
+      createdAt: ebook.createdAt,
+      updatedAt: ebook.updatedAt,
+      path: ebook.path,
+      folder: ebook.folder,
+      isReadable: ['pdf', 'epub'].includes(ebook.extension?.toLowerCase() || '')
+    }));
+    
     res.status(200).json({
       success: true,
-      data: filteredEbooks,
-      total: filteredEbooks.length
+      data: safeEbooks,
+      total: safeEbooks.length
     });
   } catch (error) {
     console.error('Error searching ebooks:', error);
@@ -64,9 +94,9 @@ export const searchEbooks = async (req: AuthenticatedRequest, res: Response): Pr
 };
 
 /**
- * Get download URL for a specific ebook
+ * Get ebook metadata (page count, format info, etc.)
  */
-export const getEbookDownloadUrl = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getEbookMetadata = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { fileId } = req.params;
     
@@ -78,27 +108,65 @@ export const getEbookDownloadUrl = async (req: AuthenticatedRequest, res: Respon
       return;
     }
     
-    const downloadUrl = await getFileDownloadUrl(fileId);
+    const metadata = await getEbookFileMetadata(fileId);
     
     res.status(200).json({
       success: true,
-      data: {
-        fileId,
-        downloadUrl
-      }
+      data: metadata
     });
   } catch (error) {
-    console.error('Error getting ebook download URL:', error);
+    console.error('Error getting ebook metadata:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get ebook download URL',
+      message: 'Failed to get ebook metadata',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 };
 
 /**
- * Get ebooks from a specific folder
+ * Stream a specific page of an ebook
+ */
+export const streamEbookPageController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { fileId } = req.params;
+    const { page = '1', format = 'image' } = req.query;
+    
+    if (!fileId) {
+      res.status(400).json({
+        success: false,
+        message: 'File ID is required'
+      });
+      return;
+    }
+    
+    const pageNumber = parseInt(page as string, 10);
+    if (isNaN(pageNumber) || pageNumber < 1) {
+      res.status(400).json({
+        success: false,
+        message: 'Valid page number is required'
+      });
+      return;
+    }
+    
+    const pageData = await streamEbookPage(fileId, pageNumber, format as string);
+    
+    res.status(200).json({
+      success: true,
+      data: pageData
+    });
+  } catch (error) {
+    console.error('Error streaming ebook page:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to stream ebook page',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Get ebooks from specific folder (without download URLs)
  */
 export const getEbooksByFolder = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -112,25 +180,38 @@ export const getEbooksByFolder = async (req: AuthenticatedRequest, res: Response
       return;
     }
     
-    const files = await getFilesByFolder(decodeURIComponent(folderName));
+    const ebooks = await getFilesByFolder(decodeURIComponent(folderName));
     
-    // Filter for ebook formats
+    // Filter for ebook formats and remove download URLs
     const ebookExtensions = ['pdf', 'epub', 'mobi', 'azw', 'azw3'];
-    const ebooks = files.filter(file => 
+    const filteredEbooks = ebooks.filter(file => 
       ebookExtensions.some(ext => file.extension?.toLowerCase() === ext)
     );
     
+    const safeEbooks = filteredEbooks.map(ebook => ({
+      id: ebook.id,
+      name: ebook.name,
+      extension: ebook.extension,
+      type: ebook.type,
+      size: ebook.size,
+      createdAt: ebook.createdAt,
+      updatedAt: ebook.updatedAt,
+      path: ebook.path,
+      folder: ebook.folder,
+      isReadable: ['pdf', 'epub'].includes(ebook.extension?.toLowerCase() || '')
+    }));
+    
     res.status(200).json({
       success: true,
-      data: ebooks,
-      total: ebooks.length,
+      data: safeEbooks,
+      total: safeEbooks.length,
       folder: folderName
     });
   } catch (error) {
     console.error('Error fetching ebooks from folder:', error);
     res.status(500).json({
       success: false,
-      message: `Failed to fetch ebooks from folder`,
+      message: 'Failed to fetch ebooks from folder',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }

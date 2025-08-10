@@ -156,26 +156,21 @@ export const processHubspotWebhook = async (
     // Extract the event type and data from the payload
     const { eventId, subscriptionType, objectId, propertyName, propertyValue } = payload;
     
-    console.log(`Received HubSpot webhook: ${subscriptionType} for object ${objectId}`);
-    
     // Handle different event types
     switch (subscriptionType) {
       case 'contact.propertyChange':
         // Handle contact property change
-        console.log(`Contact ${objectId} property ${propertyName} changed to ${propertyValue}`);
         // Implement your business logic here
         break;
       
       case 'deal.creation':
         // Handle deal creation
-        console.log(`New deal created with ID ${objectId}`);
         // Implement your business logic here
         break;
         
       // Add more cases as needed
         
       default:
-        console.log(`Unhandled webhook type: ${subscriptionType}`);
     }
   } catch (error) {
     console.error('Error processing HubSpot webhook:', error);
@@ -236,7 +231,6 @@ export const getRandomContact = async (): Promise<any> => {
           // file written successfully
         }
       })
-        console.log('Available contact properties:', propertiesResponse.data.results.map((p: { name: any; }) => p.name));
   
       // Check if any contacts were returned
       if (response.data.results && response.data.results.length > 0) {
@@ -245,7 +239,6 @@ export const getRandomContact = async (): Promise<any> => {
         return response.data.results[randomIndex];
       }
       
-      console.log('No contacts found in HubSpot');
       return null;
     } catch (error) {
       console.error('Error getting random HubSpot contact:', error);

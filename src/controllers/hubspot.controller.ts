@@ -20,7 +20,6 @@ export const handleHubspotWebhook = async (req: AuthenticatedRequest, res: Respo
     for (const webhook of webhooks) {
       // Validate the webhook payload
       if (!webhook || !webhook.eventId) {
-        console.log('Invalid webhook payload:', webhook);
         continue;
       }
       

@@ -82,13 +82,8 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
 // Robust webhook handler for Clerk events
 export const handleClerkWebhook = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('=== Clerk Webhook Received ===');
-    console.log('Method:', req.method);
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    
     // Handle GET requests (for webhook URL verification)
     if (req.method === 'GET') {
-      console.log('GET request received - webhook verification');
       res.status(200).json({ message: 'Webhook endpoint is active' });
       return;
     }
@@ -98,16 +93,13 @@ export const handleClerkWebhook = async (req: Request, res: Response): Promise<v
     const svixTimestamp = req.headers['svix-timestamp'] as string;
     const svixSignature = req.headers['svix-signature'] as string;
 
-    console.log('Svix headers:', { svixId, svixTimestamp, svixSignature });
 
     // Check if we have the required headers
     if (!svixId || !svixTimestamp || !svixSignature) {
       console.error('Missing required Svix headers');
-      console.log('Available headers:', Object.keys(req.headers));
       
       // If this is a test webhook without proper headers, respond with success
       if (req.body && typeof req.body === 'object') {
-        console.log('Processing webhook without signature verification (test mode)');
         try {
           await processWebhookEvent(req.body);
           res.status(200).json({ received: true, note: 'Processed without signature verification' });
@@ -134,8 +126,6 @@ export const handleClerkWebhook = async (req: Request, res: Response): Promise<v
 
     // Get payload
     const payload = req.body;
-    console.log('Payload type:', typeof payload);
-    console.log('Payload:', payload);
 
     if (!payload) {
       console.error('Empty payload received');
@@ -154,16 +144,12 @@ export const handleClerkWebhook = async (req: Request, res: Response): Promise<v
           ? payload.toString('utf8') 
           : JSON.stringify(payload);
 
-      console.log('Verifying webhook with payload length:', payloadString.length);
-
       const event = wh.verify(payloadString, {
         'svix-id': svixId,
         'svix-timestamp': svixTimestamp,
         'svix-signature': svixSignature,
       }) as ClerkWebhookEvent;
 
-      console.log('✅ Webhook verified successfully');
-      console.log('Event type:', event.type);
 
       // Process the event
       await processWebhookEvent(event);
@@ -175,7 +161,6 @@ export const handleClerkWebhook = async (req: Request, res: Response): Promise<v
       
       // In development, you might want to process webhooks without verification
       if (config.nodeEnv === 'development') {
-        console.log('🚨 Processing webhook without verification in development mode');
         try {
           const event = typeof payload === 'string' ? JSON.parse(payload) : payload;
           await processWebhookEvent(event);
@@ -204,26 +189,20 @@ export const handleClerkWebhook = async (req: Request, res: Response): Promise<v
 // Process the webhook event
 async function processWebhookEvent(event: any) {
   try {
-    console.log(`Processing event: ${event.type}`);
-    
     const { data } = event;
     
     // Handle different Clerk events
     switch (event.type) {
       case 'user.created':
-        console.log("Processing user creation...");
         await createUser(data);
         break;
       case 'user.updated':
-        console.log("Processing user update...");
         await updateUser(data);
         break;
       case 'user.deleted':
-        console.log("Processing user deletion...");
         await deleteUser(data.id);
         break;
       default:
-        console.log(`Unhandled webhook event: ${event.type}`);
     }
   } catch (error) {
     console.error('Error processing webhook event:', error);
@@ -234,15 +213,12 @@ async function processWebhookEvent(event: any) {
 // Helper function to create a user in the database with HubSpot sync
 async function createUser(userData: ClerkWebhookEvent['data']) {
   try {
-    console.log('Creating user with data:', userData);
-
     // Check if user already exists
     const existingUser = await db.query.users.findFirst({
       where: eq(users.clerkId, userData.id)
     });
 
     if (existingUser) {
-      console.log(`User already exists with clerkId: ${userData.id}`);
       return;
     }
 
@@ -254,7 +230,6 @@ async function createUser(userData: ClerkWebhookEvent['data']) {
       return;
     }
 
-    console.log(`Creating user with email: ${primaryEmail.email_address}`);
 
     // Insert new user first
     await db.insert(users).values({
@@ -275,7 +250,6 @@ async function createUser(userData: ClerkWebhookEvent['data']) {
       throw new Error('Failed to retrieve newly created user');
     }
 
-    console.log(`✅ User created with clerkId: ${userData.id}, internal ID: ${newUser.id}`);
 
     // Sync with HubSpot asynchronously (don't block user creation if HubSpot fails)
     syncUserWithHubSpotAsync(
@@ -302,29 +276,21 @@ async function syncUserWithHubSpotAsync(
     // Import HubSpot services dynamically to avoid circular dependencies
     const { syncUserWithHubSpot } = await import('../services/hubspot/userSync');
     
-    console.log(`🔄 Starting HubSpot sync for user ${userId}`);
     
     const result = await syncUserWithHubSpot(userId, email, firstName, lastName, {
       signup_source: 'clerk_webhook',
       sync_timestamp: new Date().toISOString()
     });
 
-    console.log(`✅ HubSpot sync completed for user ${userId}:`, {
-      contactId: result.contactId,
-      isNewContact: result.isNewContact
-    });
 
   } catch (error) {
     console.error(`❌ HubSpot sync failed for user ${userId}:`, error);
-    console.log(`User ${userId} will need manual HubSpot sync`);
   }
 }
 
 // Helper function to update a user in the database
 async function updateUser(userData: ClerkWebhookEvent['data']) {
   try {
-    console.log('Updating user with data:', userData);
-
     const primaryEmail = userData.email_addresses?.find((email: any) => email.id === userData.primary_email_address_id);
     
     await db.update(users)
@@ -335,9 +301,6 @@ async function updateUser(userData: ClerkWebhookEvent['data']) {
         updatedAt: new Date()
       })
       .where(eq(users.clerkId, userData.id));
-      
-    console.log(`✅ User updated with clerkId: ${userData.id}`);
-
   } catch (error) {
     console.error('Error updating user:', error);
     throw error;
@@ -347,12 +310,9 @@ async function updateUser(userData: ClerkWebhookEvent['data']) {
 // Helper function to delete a user from the database
 async function deleteUser(clerkId: string) {
   try {
-    console.log('Deleting user with clerkId:', clerkId);
 
     // Delete user from database
     await db.delete(users).where(eq(users.clerkId, clerkId));
-    console.log(`✅ User deleted with clerkId: ${clerkId}`);
-
   } catch (error) {
     console.error('Error deleting user:', error);
     throw error;

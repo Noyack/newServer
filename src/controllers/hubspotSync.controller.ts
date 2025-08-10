@@ -124,7 +124,6 @@ export const bulkSyncUsers = async (req: AuthenticatedRequest, res: Response): P
       return;
     }
 
-    console.log(`Starting bulk sync for up to ${parsedLimit} users`);
     
     const result = await bulkSyncExistingUsers(parsedLimit);
     

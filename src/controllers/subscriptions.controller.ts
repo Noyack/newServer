@@ -12,7 +12,6 @@ export const createSubscriptions = async(userId:string):Promise<any> =>{
         userId,
     });
     return 201
-    // console.log(`User created with clerkId: ${userData.id}`);
   } catch (error) {
       throw new AppError('Could not create subscription', 400)
   }

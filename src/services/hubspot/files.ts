@@ -1,5 +1,6 @@
 // src/services/hubspot/files.ts
 import { hubspotClient } from './client';
+import axios from 'axios';
 import fs from 'fs'
 
 export interface HubSpotFile {
@@ -64,7 +65,6 @@ export const getFiles = async (options: FileSearchOptions = {}): Promise<HubSpot
 export const getFilesByFolder = async (folderName: string, options: FileSearchOptions = {}): Promise<HubSpotFile[]> => {
   try {
     const response = await hubspotClient.get('/files/v3/files/search?path=Updated Ebooks (Oct. 2024)');
-    console.log(response.data.results)
     return response.data.results;
   } catch (error) {
     console.error('Error fetching files from folder:', error);
@@ -97,6 +97,7 @@ export const getEbooks = async (): Promise<HubSpotFile[]> => {
 
 /**
  * Get file content/download URL
+ * NOTE: This is used internally by streaming service, not exposed to frontend
  */
 export const getFileDownloadUrl = async (fileId: string): Promise<string> => {
   try {
@@ -104,6 +105,27 @@ export const getFileDownloadUrl = async (fileId: string): Promise<string> => {
     return response.data.url;
   } catch (error) {
     console.error('Error getting file download URL:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get file content as buffer (for streaming service)
+ */
+export const getFileContent = async (fileId: string): Promise<Buffer> => {
+  try {
+    // First get the file details to get the download URL
+    const fileResponse = await hubspotClient.get(`/filemanager/api/v3/files/${fileId}`);
+    const fileUrl = fileResponse.data.url;
+    
+    // Fetch the actual file content using axios
+    const contentResponse = await axios.get(fileUrl, {
+      responseType: 'arraybuffer'
+    });
+    
+    return Buffer.from(contentResponse.data);
+  } catch (error) {
+    console.error('Error getting file content:', error);
     throw error;
   }
 };
