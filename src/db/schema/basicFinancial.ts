@@ -25,6 +25,15 @@ export const basicInfo = mysqlTable('basic_info', {
   medicalConditions: json('medical_conditions'),
   riskTolerance: int('risk_tolerance'),
   investmentExperience: json('investment_experience'),
+  majorInvestmentTimeHorizon:int('majorInvestmentTimeHorizon'),
+  lifestyleSacrifice: int('lifestyleSacrifice'),
+  longTermCare: int('longTermCare'),
+  futureCareNeeds: json('future_care_needs'), // or appropriate type
+  investmentResponse: varchar('investment_response', { length: 100 }), 
+  otherMedicalConditions: text('other_medical_conditions'),
+  supportingAdultChildren: boolean('supporting_adult_children'),
+  supportingOtherRelatives: boolean('supporting_other_relatives'),
+  supportingParents: boolean('supporting_parents'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').onUpdateNow()
 });
