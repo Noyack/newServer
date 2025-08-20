@@ -6,16 +6,16 @@ import { account, createLink, createUserToken, exchangeToken, getInfo, holdings,
 const router = Router();
 
 // Protected routes requiring authentication
-router.post('/create_link_token', requireAuth, createLink );
-router.post('/exchange_public_token', requireAuth, exchangeToken);
-router.post('/create_user_token', requireAuth, createUserToken)
-router.get('/accounts', requireAuth, account);
-router.get('/transactions', requireAuth, getInfo)
-router.get('/identity', requireAuth, identify)
-router.get('/income', requireAuth, incomeCheck)
-router.get('/holdings', requireAuth, holdings)
-router.get('/investtransactions', requireAuth, transactions)
-router.get('/liabilities', requireAuth, liabilities)
+router.post('/create_link_token', createLink );
+router.post('/exchange_public_token', exchangeToken);
+router.post('/create_user_token', createUserToken)
+router.get('/accounts', account);
+router.get('/transactions', getInfo)
+router.get('/identity', identify)
+router.get('/income', incomeCheck)
+router.get('/holdings', holdings)
+router.get('/investtransactions', transactions)
+router.get('/liabilities', liabilities)
 
 
 

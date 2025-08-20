@@ -22,6 +22,27 @@
       "when": 1754869643142,
       "tag": "0002_glossy_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1754937734390,
+      "tag": "0003_modern_malcolm_colcord",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1755011535527,
+      "tag": "0004_free_dreadnoughts",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1755056942590,
+      "tag": "0005_quiet_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

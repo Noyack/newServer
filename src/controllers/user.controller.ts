@@ -5,6 +5,7 @@ import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
+import { createSubscriptions } from './subscriptions.controller';
 
 // Get user profile
 export const getUserProfile = async (
@@ -141,30 +142,18 @@ export const completeUserProfile = async (
       .where(eq(users.id, userId));
     
     // Get updated user data
-    const updatedUser = await db.query.users.findFirst({
+    await db.query.users.findFirst({
       where: eq(users.id, userId)
-    });
-    
-    if (!updatedUser) {
-      throw new AppError('User not found after onboarding completion', 404);
-    }
-    
-    res.status(200).json({
-      message: 'Onboarding completed successfully',
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        age: updatedUser.age,
-        investmentGoals: updatedUser.investmentGoals,
-        investmentAccreditation: updatedUser.investmentAccreditation,
-        riskTolerance: updatedUser.riskTolerance,
-        location: updatedUser.location,
-        onboarding: updatedUser.onboarding,
-        hubspotContactId: updatedUser.hubspotContactId
+    }).then(async(updatedUser)=>{
+      if (!updatedUser) {
+        throw new AppError('User not found after onboarding completion', 404);
+      }else{
+        const sub = await createSubscriptions(userId)
+        res.status(200).json({
+          message: 'Onboarding completed successfully',
+        });
       }
-    });
+    })
   } catch (error) {
     console.error('Error completing user profile:', error);
     if (error instanceof AppError) {

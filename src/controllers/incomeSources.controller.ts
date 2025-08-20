@@ -36,6 +36,15 @@ export const getIncomeSource = async (req: AuthenticatedRequest, res: Response):
 
 export const getTotalIncome = async (userId:string): Promise<any> => {
   try {
+    const frequency={
+      weekly: 52, 
+      biweekly: 26, 
+      bimonthly: 24,
+      monthly: 12,
+      quarterly: 4,
+      semiannually: 2,
+      annual: 1
+    }
     
     const incomeSource = await db.select().from(incomeSources).where(eq(incomeSources.userId, userId));
     
@@ -43,8 +52,14 @@ export const getTotalIncome = async (userId:string): Promise<any> => {
       return {status:404, income: null}
     }
     const res = incomeSource
-    const test = res.map(item => parseFloat(item.amount)).reduce((a, b) => a + b, 0)
-    return {status: 200, income: test};
+    const income = res.map(item => {
+      let salary
+      const multiplier = frequency[item.frequency];
+      salary = Number(item.amount) * multiplier
+
+      return parseFloat(String(salary))
+    }).reduce((a, b) => a + b, 0)
+    return {status: 200, income};
   } catch (error) {
     console.error('Error fetching income source:', error);
     return {status: 500, income: 'Internal server error'};

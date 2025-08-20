@@ -14,6 +14,8 @@ interface Config {
   hubspotPortalId: string;
   redisUrl?: string;
   clerkApiKey: string;
+  plaidClientId:string;
+  plaidSecret:string;
 }
 
 export const config: Config = {
@@ -28,6 +30,8 @@ export const config: Config = {
   hubspotPortalId: process.env.HUBSPOT_PORTAL_ID || '',
   redisUrl: process.env.REDIS_URL,
   clerkApiKey: process.env.CLERK_API_KEY || '',
+  plaidClientId: process.env.PLAID_CLIENT_ID || '',
+  plaidSecret: process.env.PLAID_SECRET || '',
 };
 
 export const equityTrustConfig = {

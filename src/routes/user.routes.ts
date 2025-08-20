@@ -6,6 +6,7 @@ import { getTotalDebts } from '../controllers/debts.controller';
 import { getTotalExpenseItemsByUser } from '../controllers/expenseItems.controller';
 import { getTotalIncome } from '../controllers/incomeSources.controller';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { getIq, saveIq } from '../controllers/wealthIq.controller';
 
 const router = Router();
 
@@ -43,7 +44,9 @@ router.get('/profile/wealth/:userId', async(req: AuthenticatedRequest, res: Resp
     }catch{
         res.status(500).json({message: "Server Error"})
     }
-})
+});
 router.patch('/:userId/onboarding', completeUserProfile);
+router.post('/wealthiq', saveIq);
+router.post('/wealthiq/getAll', getIq);
 
 export default router;

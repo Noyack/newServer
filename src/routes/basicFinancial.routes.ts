@@ -20,13 +20,13 @@ router.post('/users/:userId/income-sources', incomeSourcesController.createIncom
 router.patch('/income-sources/:id', incomeSourcesController.updateIncomeSource);
 router.delete('/income-sources/:id', incomeSourcesController.deleteIncomeSource);
 
-// Emergency Funds Routes
+// Emergency Funds Routes (Updated for consistency)
 router.get('/users/:userId/emergency-fund', emergencyFundsController.getEmergencyFund);
 router.post('/users/:userId/emergency-fund', emergencyFundsController.createEmergencyFund);
 router.patch('/emergency-fund/:id', emergencyFundsController.updateEmergencyFund);
 router.delete('/emergency-fund/:id', emergencyFundsController.deleteEmergencyFund);
 
-// Emergency Savings Accounts Routes
+// Emergency Savings Accounts Routes (Updated for consistency)
 router.get('/emergency-fund/:fundId/savings-accounts', emergencySavingsAccountsController.getEmergencySavingsAccounts);
 router.get('/emergency-savings-account/:id', emergencySavingsAccountsController.getEmergencySavingsAccount);
 router.post('/emergency-fund/:fundId/savings-accounts', emergencySavingsAccountsController.createEmergencySavingsAccount);

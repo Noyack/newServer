@@ -45,7 +45,7 @@ export const incomeSources = mysqlTable('income_sources', {
   type: mysqlEnum('type', ['salary', 'self_employment', 'pension', 'social_security', 'investments', 'rental', 'other']).notNull(),
   name: varchar('name', { length: 100 }).notNull(),
   amount: decimal('amount', { precision: 15, scale: 2 }).notNull(),
-  frequency: mysqlEnum('frequency', ['weekly', 'biweekly', 'bimonthly', 'monthly', 'quarterly', 'annual', 'irregular']).notNull(),
+  frequency: mysqlEnum('frequency', ['weekly', 'biweekly', 'bimonthly', 'monthly', 'quarterly', 'semiannually', 'annual']).notNull(),
   description: text('description'),
   taxStatus: mysqlEnum('tax_status', ['fully_taxable', 'partially_taxable', 'tax_free']),
   growthRate: decimal('growth_rate', { precision: 5, scale: 2 }),

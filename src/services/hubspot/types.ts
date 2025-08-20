@@ -129,6 +129,78 @@ export interface WebhookPayload {
   objectType?: string;
 }
 
+export interface TicketProperties {
+  subject: string;
+  content?: string;
+  hs_pipeline?: string;
+  hs_pipeline_stage?: string;
+  hs_ticket_priority?: string;
+  source_type?: 'CHAT' | 'EMAIL' | 'FORM' | 'PHONE'; // Valid HubSpot source types
+  
+  // [key: string]: string | undefined;
+}
+
+// Support ticket request from frontend
+export interface SupportTicketRequest {
+  userId: string;
+  email: string;
+  category: string;
+  subcategory?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'open' | 'in_progress' | 'closed' | 'pending';
+  subject: string;
+  description: string;
+  timestamp: string;
+}
+
+// HubSpot ticket response
+export interface HubSpotTicket {
+  id: string;
+  properties: TicketProperties;
+  createdAt: string;
+  updatedAt: string;
+  archived: boolean;
+}
+
+// Ticket search response
+export interface TicketSearchResponse {
+  total: number;
+  results: HubSpotTicket[];
+  paging?: {
+    next?: {
+      after: string;
+    };
+  };
+}
+
+// Ticket association types
+export interface TicketAssociation {
+  associationCategory: 'HUBSPOT_DEFINED' | 'USER_DEFINED';
+  associationTypeId: number;
+}
+
+// Support categories (matching your frontend)
+export interface SupportCategory {
+  id: string;
+  name: string;
+  subcategories: string[];
+}
+
+// API response for ticket operations
+export interface TicketApiResponse {
+  success: boolean;
+  ticketId?: string;
+  message: string;
+  data?: {
+    hubspotId: string;
+    subject: string;
+    status: string;
+    priority: string;
+    createdAt: string;
+  };
+  error?: string;
+}
+
 // Activity/Engagement related types
 export interface ActivityMetadata {
   subject: string;
@@ -210,12 +282,3 @@ export interface CompanyProperties {
 }
 
 // Ticket related types (for future expansion)
-export interface TicketProperties {
-  subject: string;
-  content?: string;
-  hs_pipeline?: string;
-  hs_pipeline_stage?: string;
-  hs_ticket_priority?: string;
-  source_type?: string;
-  [key: string]: string | undefined;
-}

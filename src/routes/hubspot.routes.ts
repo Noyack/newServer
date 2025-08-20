@@ -31,6 +31,8 @@ import {
   
   // Activity controllers
   logActivity,
+  createHubSpotSupportTicket,
+  getUserSupportTickets,
 } from '../controllers/hubspot.controller';
 import express from 'express';
 import { getAllEbooks, getEbookMetadata, getEbooksByFolder, searchEbooks, streamEbookPageController } from '../controllers/ebooks.controller';
@@ -89,6 +91,12 @@ router.get('/pipelines/deals/:pipelineId/stages', getDealStages);
 // ============================================================================
 router.get('/marketing/events/summary', getEventsSummary);
 router.get('/marketing/events', getAllEvents);
+
+// ============================================================================
+// SUPPORT TICKET ROUTES (Protected - require authentication)
+// ============================================================================
+router.post('/tickets', createHubSpotSupportTicket);
+router.get('/tickets', getUserSupportTickets); // Query with ?email=user@example.com
 
 // ============================================================================
 // ACTIVITY ROUTES (Protected - require authentication)

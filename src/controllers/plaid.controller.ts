@@ -4,13 +4,14 @@ import { db } from '../db';
 import { users, plaidItems } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { config } from '../config';
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments.sandbox, // Change to development or production when ready
   baseOptions: {
     headers: {
-      'PLAID-CLIENT-ID': '67e8c47a05d1170022eda857',
-      'PLAID-SECRET': '272e93c0e9f79dbe58d55ec73d3850',
+      'PLAID-CLIENT-ID': config.plaidClientId,
+      'PLAID-SECRET': config.plaidSecret,
     },
   },
 });
@@ -66,7 +67,7 @@ export const createLink = async(req: AuthenticatedRequest, res: Response): Promi
       client_name: 'Noyack',
       products: list as Products[],
       language: 'en',
-      country_codes: ['US'] as CountryCode[],
+      country_codes: ['US', 'CA'] as CountryCode[],
       user_token: userToken, // Include the user token here
       // income_verification: {
       //   income_source_types: ['bank'],
@@ -75,12 +76,24 @@ export const createLink = async(req: AuthenticatedRequest, res: Response): Promi
       //   },
       // },
     };
+
+    const plaidUserLimit = await db.query.plaidItems.findMany({
+      where: eq(plaidItems.userId, userId as string),
+    });
+    if (plaidUserLimit.length >= 3){
+      res.json({status: 401, message: "Too many account linked"})
+      return
+    }
     
     const response = await plaidClient.linkTokenCreate(request);
-    res.json({ link_token: response.data.link_token });
+    if(plaidUserLimit.length === 0){
+      res.json({status:200, link_token: response.data.link_token, noAccount:true });
+      return
+    }
+    res.json({status:200, link_token: response.data.link_token, noAccount:false });
   } catch (error: any) {
     console.error('Error creating link token:', error);
-    res.status(500).json({ error });
+    res.status(500).json({ error:'Error creating link token' });
   }
 };
 
@@ -106,7 +119,7 @@ export const exchangeToken = async (req: AuthenticatedRequest, res: Response): P
     res.json({ success: true });
   } catch (error: any) {
     console.error(error);
-    res.status(500).json({ error });
+    res.status(500).json({ error: 'server error' });
   }
 };
   
@@ -141,7 +154,7 @@ export const account = async (req: AuthenticatedRequest, res: Response): Promise
     res.json(flattenedAccounts);
   } catch (error: any) {
     console.error(error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -191,7 +204,6 @@ export const getInfo = async (req: AuthenticatedRequest, res: Response): Promise
         res.status(401).json({
           error: 'Reconnection required',
           message: 'Your bank connection needs to be updated',
-          error_code: plaidError.error_code,
         });
         return;
       }

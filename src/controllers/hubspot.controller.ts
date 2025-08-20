@@ -6,6 +6,8 @@ import * as dealsService from '../services/hubspot/deals';
 import * as marketingService from '../services/hubspot/marketing';
 import * as webhooksService from '../services/hubspot/webhooks';
 import * as activitiesService from '../services/hubspot/activities';
+import { createSupportTicket, getTicketsForUser, updateTicket, SupportTicketPayload } from '../services/hubspot/tickets';
+
 
 /**
  * Webhook handler for HubSpot events
@@ -485,3 +487,102 @@ export const getDealStages = async (req: AuthenticatedRequest, res: Response): P
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+/**
+ * Create a support ticket in HubSpot
+ */
+export const createHubSpotSupportTicket = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const ticketData: any = req.body;
+    
+    // Validate required fields
+    const requiredFields = ['userId', 'email', 'category', 'priority', 'subject', 'description'];
+    const missingFields = requiredFields.filter(field => !ticketData[field]);
+    
+    if (missingFields.length > 0) {
+      res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}` 
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(ticketData.email)) {
+      res.status(400).json({ message: 'Invalid email format' });
+      return;
+    }
+
+    // Validate priority
+    const validPriorities = ['low', 'medium', 'high', 'urgent'];
+    if (!validPriorities.includes(ticketData.priority)) {
+      res.status(400).json({ 
+        message: 'Priority must be one of: low, medium, high, urgent' 
+      });
+      return;
+    }
+
+    // Create the ticket in HubSpot
+    const hubspotTicket = await createSupportTicket(ticketData);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Support ticket created successfully',
+      data: {
+        success: true,
+        hubspotId: hubspotTicket.id,
+        subject: ticketData.subject,
+        status: ticketData.status || 'open',
+        priority: ticketData.priority,
+        createdAt: hubspotTicket.createdAt
+      }
+    });
+  } catch (error:any) {
+    console.error('Error creating support ticket:', error);
+    res.status(500).json({ 
+      message: 'Failed to create support ticket', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Get support tickets for a user
+ */
+export const getUserSupportTickets = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { email } = req.query;
+    
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ message: 'Email parameter is required' });
+      return;
+    }
+
+    const tickets = await getTicketsForUser(email);
+    
+    res.status(200).json({
+      success: true,
+      count: tickets.length,
+      tickets: tickets.map(ticket => ({
+        id: ticket.id,
+        subject: ticket.properties?.subject,
+        status: ticket.properties?.hs_pipeline_stage,
+        priority: ticket.properties?.hs_ticket_priority,
+        category: ticket.properties?.category,
+        subcategory: ticket.properties?.subcategory,
+        createdAt: ticket.createdAt,
+        updatedAt: ticket.updatedAt
+      }))
+    });
+  } catch (error:any) {
+    console.error('Error fetching user tickets:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch support tickets', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Update a support ticket status
+ */
