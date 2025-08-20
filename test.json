@@ -1,0 +1,97 @@
+{ "requests": [
+    {
+      "owner": {
+        "firstName": "Mohamed",
+        "lastName": "Kone",
+        "dateOfBirth": "1999-08-05",
+        "ssn": "323333333",
+        "married": false,
+        "minor": false,
+        "addresses": [
+          {
+            "addressType": "Legal",
+            "addressLine1": "120 testing me",
+            "addressLine2": "",
+            "city": "New York City",
+            "state": "DE",
+            "zipCode": "32323",
+            "primary": true
+          }
+        ],
+        "phones": [
+          {
+            "phoneType": "Cellular",
+            "phoneNumber": "3439601087",
+            "primary": true
+          }
+        ],
+        "emailAddresses": [
+          {
+            "email": "cto@wearenoyack.com"
+          }
+        ]
+      },
+      "beneficiaries": [],
+      "accountType": "Traditional IRA",
+      "preciousMetals": {
+        "segregated": false
+      },
+      "goldLevelService": false,
+      "fees": {
+        "currentFeePaymentMethod": "Deduct from Account",
+        "futureFeePaymentMethod": "Deduct from Account"
+      },
+      "funding": {
+        "fundingAmount": 20000,
+        "fundingMethod": "Check",
+        "contributionYear": 2025
+      },
+      "eSignature": false,
+      "statementPreference": "Electronic",
+      "investmentTypes": {
+        "Alternative": false,
+        "Metals": false,
+        "Traditional": true,
+        "Digital": false
+      },
+      "customerDueDiligence": {
+        "accountPurpose": "Wealth Accumulation/Investment",
+        "initialFundSource": {
+          "retirementFunds": false,
+          "transfer": false,
+          "rollover": false,
+          "employmentWages": false,
+          "investments": true,
+          "inheritanceTrust": false,
+          "other": true
+        },
+        "initialFundSourceOtherDetails": "Other details",
+        "ongoingFundSource": {
+          "retirementFunds": false,
+          "transfer": false,
+          "rollover": false,
+          "employmentWages": true,
+          "investments": false,
+          "inheritanceTrust": false,
+          "other": true
+        },
+        "ongoingFundSourceOtherDetails": "More details",
+        "identificationType": "US Drivers License",
+        "stateOfIssuance": "KY",
+        "idNumber": "23333353",
+        "issueDate": "08/11/2025",
+        "expirationDate": "08/28/2025",
+        "employmentStatus": "Employed",
+        "employerName": "My Company",
+        "occupationCategory": "Computer and Mathematical Occupations",
+        "occupation": "Software Developers",
+        "employerAddress": {
+          "addressLine1": "120 testing me",
+          "city": "New York City",
+          "state": "DE",
+          "zipCode": "32323"
+        }
+      }
+    }
+  ]
+}

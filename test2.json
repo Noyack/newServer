@@ -1,0 +1,104 @@
+{
+    "requests": [{
+        "owner": {
+            "firstName": "First",
+            "lastName": "Last",
+            "dateOfBirth": "1985-12-13",
+            "ssn": "123121234",
+            "married": false,
+            "minor": false,
+            "addresses": [{
+                "addressType": "Legal",
+                "addressLine1": "123 Physical",
+                "addressLine2": "Address2",
+                "city": "City",
+                "state": "OH",
+                "zipCode": "60616",
+                "primary": true
+            }],
+            "phones": [{
+                "phoneType": "Cellular",
+                "phoneNumber": "1233331234",
+                "primary": true
+            }],
+            "emailAddresses": [{
+                "email": "anemail@gmail.com"
+            }]
+        },
+        "beneficiaries": [{
+            "Spouse": true,
+            "Percentage": 100,
+            "BeneficiaryType": "Primary",
+            "DateOfBirth": "1963-12-20",
+            "FirstName": "John",
+            "LastName": "Doe"
+        }, {
+            "Spouse": false,
+            "Percentage": 100,
+            "BeneficiaryType": "Contingent",
+            "DateOfBirth": "1963-12-20",
+            "FirstName": "Jane",
+            "LastName": "Doe"
+        }],
+        "accountType": "Roth IRA",
+        "preciousMetals": {
+            "segregated": true
+        },
+        "goldLevelService": false,
+        "fees": {
+            "currentFeePaymentMethod": "Deduct from Account",
+            "futureFeePaymentMethod": "Deduct from Account"
+        },
+        "funding": {
+            "fundingAmount": 100000,
+            "fundingMethod": "Rollover",
+            "contributionYear": 2024
+        },
+        "eSignature": false,
+        "statementPreference": "Electronic",
+        "investmentTypes": {
+            "Alternative": false,
+            "Metals": true,
+            "Traditional": false,
+            "Digital": false
+        },
+        "customerDueDiligence": {
+            "accountPurpose": "Wealth Accumulation/Investment",
+            "initialFundSource": {
+                "retirementFunds": true,
+                "transfer": false,
+                "rollover": false,
+                "employmentWages": false,
+                "investments": true,
+                "inheritanceTrust": false,
+                "other": true
+            },
+            "initialFundSourceOtherDetails": "Other details",
+            "ongoingFundSource": {
+                "retirementFunds": false,
+                "transfer": false,
+                "rollover": false,
+                "employmentWages": true,
+                "investments": false,
+                "inheritanceTrust": false,
+                "other": true
+            },
+            "ongoingFundSourceOtherDetails": "More details",
+            "identificationType": "US Drivers License",
+            "stateOfIssuance": "OH",
+            "idNumber": "1234",
+            "issueDate": "07/21/2023",
+            "expirationDate": "07/21/2025",
+            "employmentStatus": "Employed",
+            "employerName": "My Company",
+            "occupationCategory": "Computer and Mathematical Occupations",
+            "occupation": "Software Developers",
+            "employerAddress": {
+                "addressLine1": "123 Main Street",
+                "city": "Cleveland",
+                "state": "OH",
+                "zipCode": "44114"
+            }
+        }
+    }]
+}
