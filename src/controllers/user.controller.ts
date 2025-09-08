@@ -23,7 +23,7 @@ export const getUserProfile = async (
     const user = req.user;
     
     // Don't return sensitive information
-    const { createdAt, email, firstName, lastName, id, onboarding, plaidUserToken, hubspotContactId } = user;
+    const { createdAt, email, firstName, lastName, id, onboarding, plaidUserToken, hubspotContactId, location } = user;
     
     res.status(200).json({
       id,
@@ -34,7 +34,41 @@ export const getUserProfile = async (
       onboarding: onboarding || false,
       plaidUserToken,
       hubspotContactId,
-      hasHubSpotContact: !!hubspotContactId
+      hasHubSpotContact: !!hubspotContactId,
+      location
+    });
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+};
+export const getPersonalDetails = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    // req.userId is the internal user ID from our auth middleware
+    // req.user contains the full user object
+    if (!req.userId || !req.user) {
+      throw new AppError('User not authenticated', 401);
+    }
+    
+    // We already have the user from auth middleware, so just return it
+    const user = req.user;
+    
+    // Don't return sensitive information
+    const { email, firstName, lastName, id, location } = user;
+    
+    res.status(200).json({
+      id,
+      email,
+      firstName,
+      lastName,
+      location
     });
   } catch (error) {
     console.error('Error getting user profile:', error);

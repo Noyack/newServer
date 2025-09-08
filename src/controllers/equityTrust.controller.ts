@@ -3,6 +3,9 @@ import { Response } from 'express';
 import { EquityTrustService, AccountOpenRequest, DirectTradeRequest } from '../services/equityTrust.service';
 import { equityTrustConfig } from '../config';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { db } from '../db';
+import { equityAccounts } from '../db/schema/equityTrust';
+import { eq } from 'drizzle-orm';
 
 const equityTrustService = new EquityTrustService(equityTrustConfig);
 
@@ -22,7 +25,14 @@ export const equityTrustController = {
       const response = await equityTrustService.openAccount(accountRequest, apiVersion);
       
       console.log('✅ Backend: Received response from Equity Trust:', JSON.stringify(response, null, 2));
-
+      if(req.userId){
+      const enter = {
+        userId: req.userId || "",
+        accountNumber: response.response[0].accountNumber,
+        activityId: response.response[0].activityId
+      }
+      await db.insert(equityAccounts).values({...enter}).execute()
+    }
       res.json({
         success: true,
         data: response,
@@ -100,20 +110,19 @@ export const equityTrustController = {
 
   // Get account activities (unchanged)
   async getActivities(req: AuthenticatedRequest, res: Response): Promise<void> {
+    
     try {
-      const { accountNumber, activityId, fromDate, toDate } = req.query;
-      
-      const response = await equityTrustService.getActivities({
-        accountNumber: accountNumber as string,
-        activityId: activityId as string,
-        fromDate: fromDate as string,
-        toDate: toDate as string,
-      });
+      const id = req.userId
+      if(id){
+        const accounts = await db.select().from(equityAccounts).where(eq(equityAccounts.userId, id))
+        let numbers = accounts.map((x, i) => x.accountNumber).join(',');
+      const response = await equityTrustService.getActivities(numbers);
 
       res.json({
         success: true,
         data: response,
       });
+    }
     } catch (error) {
       console.error('Get activities error:', error);
       res.status(500).json({
@@ -126,16 +135,28 @@ export const equityTrustController = {
   // Get user accounts (unchanged)
   async getAccounts(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { accountNumber } = req.params
-      const response = await equityTrustService.getAccounts(accountNumber);
-      
-      res.json({
-        success: true,
-        data: response,
+      const id = req.userId
+      if(id){
+        const accounts = await db.select().from(equityAccounts).where(eq(equityAccounts.userId, id))
+        let numbers = accounts.map((x, i) => x.accountNumber).join(',');
+        const response = await equityTrustService.getAccounts(numbers);
+        
+        res.json({
+          success: true,
+          data: response,
+        });
+      }
+      else{
+        res.status(404).json({
+        error: 'Failed to get accounts',
+        message: 'No account found',
+        
       });
+      return
+      }
     } catch (error) {
       console.error('Get accounts error:', error);
-      res.status(500).json({
+      res.status(404).json({
         error: 'Failed to get accounts',
         message: error instanceof Error ? error.message : 'Unknown error',
       });

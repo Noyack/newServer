@@ -16,6 +16,7 @@ interface Config {
   clerkApiKey: string;
   plaidClientId:string;
   plaidSecret:string;
+  plaidEnv:string;
 }
 
 export const config: Config = {
@@ -32,6 +33,7 @@ export const config: Config = {
   clerkApiKey: process.env.CLERK_API_KEY || '',
   plaidClientId: process.env.PLAID_CLIENT_ID || '',
   plaidSecret: process.env.PLAID_SECRET || '',
+  plaidEnv: process.env.PLAID_ENV || '',
 };
 
 export const equityTrustConfig = {

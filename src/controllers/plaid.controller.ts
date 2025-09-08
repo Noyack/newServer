@@ -7,7 +7,7 @@ import { AuthenticatedRequest } from '../middleware/auth';
 import { config } from '../config';
 
 const configuration = new Configuration({
-  basePath: PlaidEnvironments.sandbox, // Change to development or production when ready
+  basePath: PlaidEnvironments[config.plaidEnv], // Change to development or production when ready
   baseOptions: {
     headers: {
       'PLAID-CLIENT-ID': config.plaidClientId,

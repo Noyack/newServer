@@ -260,20 +260,10 @@ class EquityTrustService {
     }
   }
 
-  async getActivities(params: {
-    accountNumber?: string;
-    activityId?: string;
-    fromDate?: string;
-    toDate?: string;
-  }): Promise<ActivityResponse> {
+  async getActivities(accountNumber:string): Promise<ActivityResponse> {
     try {
-      const queryParams = new URLSearchParams();
-      Object.entries(params).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
       const response: AxiosResponse<ActivityResponse> = await this.axiosInstance.get(
-        `/activities?${queryParams.toString()}`
+        `/activities?accountNumber=${accountNumber}`
       );
       return response.data;
     } catch (error) {

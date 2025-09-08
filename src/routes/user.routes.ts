@@ -1,7 +1,7 @@
 // Add this to your user.routes.ts for debugging
 
 import { Response, Router } from 'express';
-import { completeUserProfile, getUserProfile, updateUserProfile } from '../controllers/user.controller';
+import { completeUserProfile, getPersonalDetails, getUserProfile, updateUserProfile } from '../controllers/user.controller';
 import { getTotalDebts } from '../controllers/debts.controller';
 import { getTotalExpenseItemsByUser } from '../controllers/expenseItems.controller';
 import { getTotalIncome } from '../controllers/incomeSources.controller';
@@ -32,6 +32,7 @@ router.get('/debug', async (req: AuthenticatedRequest, res: Response): Promise<v
 
 // Protected routes requiring authentication
 router.get('/profile', getUserProfile);
+router.get('/personal', getPersonalDetails);
 router.patch('/profile', updateUserProfile);
 router.get('/profile/wealth/:userId', async(req: AuthenticatedRequest, res: Response):Promise<any>=>{
     const userId = req.params.userId
