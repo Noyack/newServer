@@ -221,4 +221,114 @@ export const equityTrustController = {
       });
     }
   },
+
+  // Get available custodians
+  async getCustodians(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      console.log('🏦 Backend: Fetching custodians from Equity Trust');
+
+      const response = await equityTrustService.getCustodians();
+
+      console.log('✅ Backend: Received custodians response:', JSON.stringify(response, null, 2));
+
+      res.json({
+        success: true,
+        data: response,
+      });
+    } catch (error) {
+      console.error('❌ Get custodians error:', error);
+      res.status(500).json({
+        error: 'Failed to get custodians',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  },
+
+  // Initialize transfer
+  async initializeTransfer(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { requests, apiVersion = '2' } = req.body;
+
+      if (!requests || !Array.isArray(requests) || requests.length === 0) {
+        res.status(400).json({
+          error: 'Missing or invalid transfer request data',
+          message: 'requests array is required'
+        });
+        return;
+      }
+
+      console.log('🔄 Backend: Processing transfer request:', JSON.stringify({ requests }, null, 2));
+
+      // Add user info if standalone transfer (no existing account)
+      const userId = req.userId;
+      if (userId && !requests[0].account?.accountNumber) {
+        console.log('🔍 Backend: Adding user account info for standalone transfer');
+
+        // Try to get user's existing Equity account
+        const accounts = await db.select().from(equityAccounts).where(eq(equityAccounts.userId, userId));
+
+        if (accounts.length > 0) {
+          // Use existing account
+          requests[0].account = {
+            accountNumber: accounts[0].accountNumber,
+            ownerContactId: userId // Use user ID as contact ID for now
+          };
+          console.log('✅ Backend: Using existing account:', accounts[0].accountNumber);
+        } else {
+          console.log('⚠️ Backend: No existing account found - will need owner information');
+        }
+      }
+
+      const response = await equityTrustService.initializeTransfer({ requests }, apiVersion);
+
+      console.log('✅ Backend: Received transfer response:', JSON.stringify(response, null, 2));
+
+      // Store transfer activity in database
+      if (userId && response.response?.[0]) {
+        const transferResult = response.response[0];
+
+        // If this created a new account, store it
+        if (transferResult.accountNumber) {
+          try {
+            await db.insert(equityAccounts).values({
+              userId: userId,
+              accountNumber: transferResult.accountNumber,
+              activityId: transferResult.activityId
+            }).execute();
+            console.log('✅ Backend: Stored new account from transfer:', transferResult.accountNumber);
+          } catch (dbError) {
+            console.log('ℹ️ Backend: Account may already exist in database');
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        data: response,
+        accountNumber: response.response?.[0]?.accountNumber,
+        activityId: response.response?.[0]?.activityId,
+      });
+    } catch (error: any) {
+      console.error('❌ Transfer initialization error:', error);
+
+      // Enhanced error logging for transfers
+      if (error.response?.data) {
+        console.error('❌ Equity Trust Transfer API Error:', JSON.stringify(error.response.data, null, 2));
+
+        if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+          console.error('❌ Transfer Validation Errors:');
+          error.response.data.errors.forEach((err: any, index: number) => {
+            console.error(`   ${index + 1}. ${JSON.stringify(err, null, 2)}`);
+          });
+        }
+      }
+
+      res.status(500).json({
+        error: 'Failed to initialize transfer',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        apiErrors: error.response?.data?.errors || null,
+        correlationId: error.response?.data?.correlationId || null,
+      });
+    }
+  },
 };

@@ -309,6 +309,27 @@ class EquityTrustService {
     }
   }
 
+  async getCustodians(): Promise<any> {
+    try {
+      const response = await this.axiosInstance.get('/transfer/custodians');
+      return response.data;
+    } catch (error) {
+      console.error('Error getting custodians:', error);
+      throw this.handleApiError(error);
+    }
+  }
+
+  async initializeTransfer(request: any, apiVersion?: string): Promise<any> {
+    try {
+      const url = apiVersion ? `/transfer/initialize?apiVersion=${apiVersion}` : '/transfer/initialize';
+      const response = await this.axiosInstance.post(url, request);
+      return response.data;
+    } catch (error) {
+      console.error('Error initializing transfer:', error);
+      throw this.handleApiError(error);
+    }
+  }
+
   private handleApiError(error: any): Error {
     if (error.response?.data) {
       const apiError = error.response.data;

@@ -64,7 +64,7 @@ export const getFiles = async (options: FileSearchOptions = {}): Promise<HubSpot
  */
 export const getFilesByFolder = async (folderName: string, options: FileSearchOptions = {}): Promise<HubSpotFile[]> => {
   try {
-    const response = await hubspotClient.get('/files/v3/files/search?path=Updated Ebooks (Oct. 2024)');
+    const response = await hubspotClient.get('/files/v3/files/search?path=ebooks');
     return response.data.results;
   } catch (error) {
     console.error('Error fetching files from folder:', error);
@@ -84,13 +84,34 @@ export const getEbooks = async (): Promise<HubSpotFile[]> => {
 
     // Filter for common ebook formats
     const ebookExtensions = ['pdf', 'epub', 'mobi', 'azw', 'azw3', 'png'];
-    const filteredEbooks = ebooks.filter(file => 
+    const filteredEbooks = ebooks.filter(file =>
       ebookExtensions.some(ext => file.extension?.toLowerCase() === ext)
     );
-    
+
     return filteredEbooks;
   } catch (error) {
     console.error('Error fetching ebooks:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get investment reports specifically from the "2025 Investment Reports PDFs" folder
+ */
+export const getInvestmentReports = async (): Promise<HubSpotFile[]> => {
+  try {
+    const response = await hubspotClient.get('/files/v3/files/search?path=2025%20Investment%20Reports%20PDFs&limit=50');
+    const reports = response.data.results;
+
+    // Filter for PDF and document formats
+    const reportExtensions = ['pdf', 'doc', 'docx'];
+    const filteredReports = reports.filter(file =>
+      reportExtensions.some(ext => file.extension?.toLowerCase() === ext)
+    );
+
+    return filteredReports;
+  } catch (error) {
+    console.error('Error fetching investment reports:', error);
     throw error;
   }
 };

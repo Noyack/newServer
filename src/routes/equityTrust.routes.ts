@@ -20,4 +20,8 @@ router.post('/investment/submit', (req, res) => equityTrustController.submitInve
 // Activity tracking
 router.get('/activities', (req, res) => equityTrustController.getActivities(req, res));
 
+// Transfer management
+router.get('/transfer/custodians', (req, res) => equityTrustController.getCustodians(req, res));
+router.post('/transfer/initialize', (req, res) => equityTrustController.initializeTransfer(req, res));
+
 export default router;
