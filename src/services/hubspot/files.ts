@@ -105,7 +105,7 @@ export const getInvestmentReports = async (): Promise<HubSpotFile[]> => {
 
     // Filter for PDF and document formats
     const reportExtensions = ['pdf', 'doc', 'docx'];
-    const filteredReports = reports.filter(file =>
+    const filteredReports = reports.filter((file: { extension: string; }) =>
       reportExtensions.some(ext => file.extension?.toLowerCase() === ext)
     );
 
